@@ -94,7 +94,9 @@ async def pygame_event_loop(life_game: LifeGame, screen, clickable_cells:list[li
                 if pressed_keys[pygame.K_ESCAPE] or pressed_keys[pygame.K_q] :
                     pygame.quit()
                     exit()
-
+                if pressed_keys[pygame.K_h] :
+                    global is_text_hidden
+                    is_text_hidden=not is_text_hidden
                 global TIME
                 if pressed_keys[pygame.K_KP_PLUS] or pressed_keys[pygame.K_PLUS] :
                     TIME/=2 
@@ -106,7 +108,8 @@ async def pygame_event_loop(life_game: LifeGame, screen, clickable_cells:list[li
 
         await asyncio.sleep(0.05)
         draw_cells(clickable_cells, screen) 
-        draw_current_status(screen)
+        if not is_text_hidden:
+            draw_current_status(screen)
         pygame.display.flip()
     pygame.quit()
 
@@ -119,6 +122,7 @@ def change_on_touch(clickable_cells: list[list[PyGameCell]]):
 
 paused = False 
 gen_passed = 0
+is_text_hidden = False
 TIME = 0.1 
 async def move_across_time(life_game: LifeGame):
      while True:
