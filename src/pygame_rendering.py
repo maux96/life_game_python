@@ -45,19 +45,21 @@ class PyGameCell:
                                                           else Cell.LIFE
 
 
-SIZE =12 
-GAP = 3
-
-async def pygame_main(life_game):
+async def pygame_main(life_game, size=12, gap=3):
     xs =life_game._width
     ys =life_game._height
+
+    global SIZE, GAP
+    SIZE = size
+    GAP= gap
+
     screen = init_pygame_and_get_screen(xs, ys)
 
     clickable_cells = [
         [PyGameCell(x,y, life_game) for y in range(ys)] for x in range(xs)] 
 
     await asyncio.gather(
-        move_across_time(life_game, screen, clickable_cells),
+        move_across_time(life_game),
         pygame_event_loop(life_game, screen, clickable_cells) )
 
 def init_pygame_and_get_screen(xs: int, ys: int):
@@ -89,17 +91,17 @@ async def pygame_event_loop(life_game: LifeGame, screen, clickable_cells:list[li
                     global paused
                     print(f"Game {'started' if paused  else 'paused'}!")
                     paused=not paused
-                if pressed_keys[pygame.K_ESCAPE]:
+                if pressed_keys[pygame.K_ESCAPE] or pressed_keys[pygame.K_q] :
                     pygame.quit()
                     exit()
 
                 global TIME
                 if pressed_keys[pygame.K_KP_PLUS] or pressed_keys[pygame.K_PLUS] :
                     TIME/=2 
-                    print(TIME)
+                    print(f"Speed Increased! ({TIME})")
                 elif pressed_keys[pygame.K_MINUS] or pressed_keys[pygame.K_KP_MINUS] :
                     TIME*=2 
-                    print(TIME)
+                    print(f"Speed Decreased! ({TIME})")
 
 
         await asyncio.sleep(0.05)
@@ -118,13 +120,12 @@ def change_on_touch(clickable_cells: list[list[PyGameCell]]):
 paused = False 
 gen_passed = 0
 TIME = 0.1 
-async def move_across_time(life_game: LifeGame, screen, clickable_cells):
+async def move_across_time(life_game: LifeGame):
      while True:
         while not paused:
             global gen_passed
             gen_passed +=1 
             life_game.next_generation()
-            #draw_cells(clickable_cells, screen)
             await asyncio.sleep(TIME)
         await asyncio.sleep(1)
 

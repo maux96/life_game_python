@@ -1,14 +1,34 @@
 from time import sleep
 from random import randint 
+from sys import argv
 
 from life_game import LifeGame
 from pygame_rendering import pygame_main
 from constructions import GLIDER
 import asyncio
 
+
+sizex=50
+sizey=40
+cellsize=12
+gap=2
+def config():
+    global sizex, sizey,cellsize, gap
+    for i in range(len(argv)):
+        current = argv[i]
+        if current == '--sizex':
+            sizex=int(argv[i+1])
+        elif current == '--sizey':
+            sizey=int(argv[i+1])
+        elif current == '--cellsize':
+            cellsize=int(argv[i+1])
+        elif current == '--gap':
+            gap=int(argv[i+1])
+
 def main():
-    sizex=50
-    sizey=40
+
+    config()
+
     life_game = LifeGame(sizex,sizey)
     #life_game.set_random_cell_alive(total=10) 
 
@@ -30,7 +50,7 @@ def main():
 
 
     #console_loop(life_game)
-    asyncio.run(pygame_main(life_game))
+    asyncio.run(pygame_main(life_game,size=cellsize, gap=gap))
     
  
 
