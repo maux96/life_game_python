@@ -26,7 +26,14 @@ class PyGameCell:
         if ROUNDED and not is_dead  :
             pygame.draw.ellipse(screen,(255,255,255),pygame.Rect(xx+3,yy+1,SIZE/3,3))
 
-    def is_clicked(self, mouse_x, mouse_y):
+    def draw_border(self, screen):
+        if self.is_hover(*pygame.mouse.get_pos()):
+            xx = self.x * SIZE + (self.x-1) * GAP
+            yy = self.y*SIZE+(self.y-1)*GAP
+            pygame.draw.rect(screen, (255,255,255), (xx,yy,int(SIZE+GAP*2), int(SIZE+GAP*2)),2,
+                         border_radius=2 if ROUNDED else 0 )
+            pass
+    def is_hover(self, mouse_x, mouse_y):
         if (self.x*SIZE+ self.x * GAP < mouse_x < (self.x+1)*SIZE + self.x * GAP) and\
             (self.y*SIZE+ self.y * GAP < mouse_y < (self.y+1)*SIZE+ self.y * GAP ):
             return True
@@ -82,22 +89,25 @@ def init_pygame_and_get_screen(xs: int, ys: int):
 
 async def pygame_event_loop(life_game: LifeGame, screen, clickable_cells:list[list[PyGameCell]]):
     
+    
+    global semi_paused, paused
     is_clicking=False
     running = True
     while running:
         for event in pygame.event.get():
+
             if event.type == pygame.MOUSEBUTTONDOWN:
                 is_clicking = True
                 change_on_touch(clickable_cells)
+                semi_paused=True
             elif event.type == pygame.MOUSEBUTTONUP:
                 is_clicking = False
+                semi_paused= False
             elif is_clicking :
                 change_on_touch(clickable_cells)
-
             elif event.type == pygame.KEYDOWN:
                 pressed_keys = pygame.key.get_pressed()
                 if pressed_keys[pygame.K_SPACE]:
-                    global paused
                     print(f"Game {'started' if paused  else 'paused'}!")
                     paused=not paused
                 if pressed_keys[pygame.K_ESCAPE] or pressed_keys[pygame.K_q] :
@@ -114,6 +124,7 @@ async def pygame_event_loop(life_game: LifeGame, screen, clickable_cells:list[li
                     TIME*=2 
                     print(f"Speed Decreased! ({TIME})")
 
+            
 
         await asyncio.sleep(0.05)
         draw_cells(clickable_cells, screen) 
@@ -126,16 +137,17 @@ def change_on_touch(clickable_cells: list[list[PyGameCell]]):
     mouse_x, mouse_y = pygame.mouse.get_pos()
     for row in clickable_cells:
         for cell in row:
-            if cell.is_clicked(mouse_x, mouse_y) and not cell.is_recently_clicked:
+            if cell.is_hover(mouse_x, mouse_y) and not cell.is_recently_clicked:
                 cell.holly_intervention()
 
 paused = False 
+semi_paused = False 
 gen_passed = 0
 is_text_hidden = False
 TIME = 0.1 
 async def move_across_time(life_game: LifeGame):
      while True:
-        while not paused:
+        while not paused and not semi_paused:
             global gen_passed
             gen_passed +=1 
             life_game.next_generation()
@@ -145,6 +157,7 @@ async def move_across_time(life_game: LifeGame):
 def draw_current_status(screen):
     font = pygame.font.SysFont('Comic Sans MS', 24)
     content = f"generations: {str(gen_passed)} (Speed: {TIME}) {'(Paused)' if paused else ''}" 
+    content += '(Semi-paused)' if not paused and semi_paused else ''
     text = font.render(content, True, TEXT_COLOR)
     screen.blit(text,(0,0)) 
     pass
@@ -154,3 +167,4 @@ def draw_cells(cells, screen: pygame.Surface):
     for row in cells: 
         for cell in row:
             cell.draw(screen)
+            cell.draw_border(screen)
