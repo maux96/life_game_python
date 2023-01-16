@@ -1,4 +1,4 @@
-# LifeGame
+# Conway's Game of Life
 
 One more time, the game of life written in python using pygame.
 
