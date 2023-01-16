@@ -9,28 +9,26 @@ class PyGameCell:
     def __init__(self, x, y, life_game: LifeGame):
         self.x = x
         self.y = y
-        self.size =SIZE 
-        self.gap =GAP 
         self.life_game= life_game
         self.last_click = 0
 
     def draw(self, screen):
         is_dead = self.life_game._board[self.x][self.y]==Cell.DEAD
         if is_dead:
-            color = (150, 20, 20)
+            color =DEAD_COLOR 
         else:
-            color = (0, 255, 0)
+            color =LIFE_COLOR 
 
-        xx = self.x * self.size + self.x * self.gap
-        yy = self.y*self.size+self.y*self.gap
-        pygame.draw.rect(screen, color, (xx,yy,self.size, self.size),
-                         border_radius=2)
-        if not is_dead:
-            pygame.draw.ellipse(screen,(255,255,255),pygame.Rect(xx+3,yy+1,self.size/3,3))
+        xx = self.x * SIZE + self.x * GAP
+        yy = self.y*SIZE+self.y*GAP
+        pygame.draw.rect(screen, color, (xx,yy,SIZE, SIZE),
+                         border_radius=2 if ROUNDED else 0)
+        if ROUNDED and not is_dead  :
+            pygame.draw.ellipse(screen,(255,255,255),pygame.Rect(xx+3,yy+1,SIZE/3,3))
 
     def is_clicked(self, mouse_x, mouse_y):
-        if (self.x*self.size+ self.x * self.gap < mouse_x < (self.x+1)*self.size + self.x * self.gap) and\
-            (self.y*self.size+ self.y * self.gap < mouse_y < (self.y+1)*self.size+ self.y * self.gap ):
+        if (self.x*SIZE+ self.x * GAP < mouse_x < (self.x+1)*SIZE + self.x * GAP) and\
+            (self.y*SIZE+ self.y * GAP < mouse_y < (self.y+1)*SIZE+ self.y * GAP ):
             return True
         return False
 
@@ -45,13 +43,24 @@ class PyGameCell:
                                                           else Cell.LIFE
 
 
-async def pygame_main(life_game, size=12, gap=3):
+async def pygame_main(life_game, size=12, gap=3,
+                      bg_color=(50,20,20),
+                      life_color=(0, 255, 0),
+                      dead_color=(150, 20, 20),
+                      text_color=(220,220,220),
+                      rounded=True):
+
     xs =life_game._width
     ys =life_game._height
 
-    global SIZE, GAP
+    global SIZE, GAP, BG_COLOR, LIFE_COLOR, DEAD_COLOR, ROUNDED, TEXT_COLOR
     SIZE = size
     GAP= gap
+    BG_COLOR=bg_color
+    LIFE_COLOR=life_color
+    DEAD_COLOR=dead_color
+    TEXT_COLOR=text_color
+    ROUNDED=rounded
 
     screen = init_pygame_and_get_screen(xs, ys)
 
@@ -136,12 +145,12 @@ async def move_across_time(life_game: LifeGame):
 def draw_current_status(screen):
     font = pygame.font.SysFont('Comic Sans MS', 24)
     content = f"generations: {str(gen_passed)} (Speed: {TIME}) {'(Paused)' if paused else ''}" 
-    text = font.render(content, True, (255, 255, 255))
+    text = font.render(content, True, TEXT_COLOR)
     screen.blit(text,(0,0)) 
     pass
 
 def draw_cells(cells, screen: pygame.Surface):
-    screen.fill((50,20,20))
+    screen.fill(BG_COLOR)
     for row in cells: 
         for cell in row:
             cell.draw(screen)
